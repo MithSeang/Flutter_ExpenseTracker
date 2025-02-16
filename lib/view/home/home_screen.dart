@@ -8,30 +8,31 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
-
 import '../../controller/calendar_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
   final ExpenseController _expenseController = Get.put(ExpenseController());
-  final CalendarController _calendarController = Get.put(CalendarController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('Expense Tracker'),
-          actions: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.search))
-          ],
-        ),
-        body: Obx(() {
-          if (_expenseController.isFetching.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final expense = _expenseController.lstExpense.value;
+    final CalendarController _calendarController =
+        Get.put(CalendarController());
 
-          return RefreshIndicator(
+    return Obx(() {
+      if (_expenseController.isFetching.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final expense = _expenseController.lstExpense.value;
+
+      return Scaffold(
+          appBar: AppBar(
+            title: const Text('Expense Tracker'),
+            actions: [
+              IconButton(onPressed: () {}, icon: const Icon(Icons.search))
+            ],
+          ),
+          body: RefreshIndicator(
             onRefresh: () async {
               _expenseController.getExpense();
             },
@@ -86,7 +87,8 @@ class HomeScreen extends StatelessWidget {
                                 crossAxisSpacing: 2,
                                 mainAxisSpacing: 2,
                                 childAspectRatio: 1.7),
-                        itemCount: expense.data!.length,
+                        itemCount:
+                            expense.data != null ? expense.data!.length : 0,
                         itemBuilder: (context, index) {
                           final item = expense.data![index];
                           return Card(
@@ -299,7 +301,7 @@ class HomeScreen extends StatelessWidget {
                       ),
               ],
             ),
-          );
-        }));
+          ));
+    });
   }
 }

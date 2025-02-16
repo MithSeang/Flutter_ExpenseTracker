@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:expense_tracker/controller/calendar_controller.dart';
 import 'package:expense_tracker/model/create_expense_model.dart';
+import 'package:expense_tracker/view/login/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 
 import '../model/expense_category.model.dart';
@@ -13,6 +16,7 @@ class ExpenseController extends GetxController {
   var isFetching = false.obs;
   var lstExpense = Expense_Model().obs;
   var editExpense = CreateExpense_Model().obs;
+  final box = GetStorage();
 
   var items = [
     'Food',
@@ -25,11 +29,9 @@ class ExpenseController extends GetxController {
   ].obs;
   var selectedItem = 'Food'.obs;
   var expenses = <ExpenseCategory>[].obs;
-
   @override
   void onInit() async {
     super.onInit();
-
     await getExpense();
     generateExpenses();
   }
@@ -38,11 +40,11 @@ class ExpenseController extends GetxController {
     final calendarController = Get.put(CalendarController());
     final selectedMonth = calendarController.selectedMoth.value;
     final response = await apiService.fetchExpense();
-    if (response.data == null) {
+    if (response?.data == null) {
       expenses.clear();
       return;
     } // Filter expenses by selected month
-    var monthlyExpenses = response.data!.where((expense) {
+    var monthlyExpenses = response?.data!.where((expense) {
       if (expense.date == null || expense.date!.isEmpty) return false;
 
       final expenseDate = _parseDate(expense.date!);
@@ -55,7 +57,7 @@ class ExpenseController extends GetxController {
     // Create a map to group expenses by category
     Map<String, double> categoryMap = {};
 
-    for (var item in monthlyExpenses) {
+    for (var item in monthlyExpenses!) {
       String category = item.category.toString(); // loop item from api
       double amount = item.amount!.toDouble(); // loop item from api
 
@@ -104,13 +106,35 @@ class ExpenseController extends GetxController {
 
   Future<void> getExpense() async {
     try {
+      print(
+        'Current route :${Get.currentRoute}',
+      );
       final calendarController = Get.put(CalendarController());
       final selectedMonth = calendarController.selectedMoth.value;
 
       isFetching.value = true;
       final response = await apiService.fetchExpense();
+      if (response == null) {
+        isFetching.value = false;
+        return;
+      }
+      // if (response.data is Map<String, dynamic>) {
+      //   final responseMap = response.data as Map<String, dynamic>;
+      //   if (responseMap['message'] == 'Invalid token') {
+      //     // Handle invalid token and show an error message
+      //     throw Exception('Invalid token. Please log in again.');
+      //   }
+      //   if (responseMap['message'] == 'Access denied, Unauthorized') {
+      //     // Handle unauthorized access and show an error message
+      //     throw Exception('Access denied. Please log in again.');
+      //   }
+      // }
+
+      print('Response: $response'); // Add this for debugging
+      if (response.data == null) {
+        throw Exception('No expense available');
+      }
       lstExpense.value = response;
-      print('All Expenses: ${lstExpense.value.data}');
 
       final filteredExpenses = lstExpense.value.data?.where((expense) {
         final expenseDate = _parseDate(expense.date);
@@ -134,9 +158,50 @@ class ExpenseController extends GetxController {
       isFetching.value = false;
     } catch (e) {
       isFetching.value = false;
-      Get.snackbar('Error fetching expenses', 'Retry', colorText: Colors.red);
-      print(
-          'Error fetching expenses: ${e.toString().replaceAll("Exception: ", "")}');
+      if (e is DioException) {
+        if (e.response != null) {
+          print('DioErrors: ${e.response?.data}');
+          // If server response data is available, display it
+          Get.snackbar(
+            'Error fetching expenses',
+            e.response?.data ?? e.message,
+            colorText: Colors.red,
+          );
+          if (e.response?.data['message'] == 'Invalid token') {
+            Get.snackbar(
+              'Invalid token',
+              'Your token is invalid. Please log in again.',
+              colorText: Colors.red,
+            );
+          }
+
+          // Handle missing token (Access denied, Unauthorized)
+          else if (e.response?.data['message'] ==
+              'Access denied, Unauthorized') {
+            Get.snackbar(
+              'Access Denied',
+              'Your session has expired. Please log in again.',
+              colorText: Colors.red,
+            );
+          }
+        } else {
+          print('DioError: No response data');
+          Get.snackbar(
+            'Error fetching expenses',
+            'Something went wrong. Please try again later.',
+            colorText: Colors.red,
+          );
+        }
+      } else {
+        // For other errors, log and show a general error message
+        print('General error: $e');
+        Get.snackbar(
+          'Error fetching expenses',
+          "Unauthorized. Please log in again",
+          // e.toString().replaceAll("Unexpected response: ", ""),
+          colorText: Colors.red,
+        );
+      }
     }
   }
 

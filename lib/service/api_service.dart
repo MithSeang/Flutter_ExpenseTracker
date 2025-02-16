@@ -8,6 +8,7 @@ import 'package:expense_tracker/model/get_user_model.dart';
 import 'package:expense_tracker/model/login_model.dart';
 import 'package:expense_tracker/model/register_model.dart';
 import 'package:expense_tracker/utils/path.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -79,25 +80,34 @@ class ApiService {
     }
   }
 
-  Future<Expense_Model> fetchExpense() async {
+  Future<Expense_Model?> fetchExpense() async {
+    final token = box.read('expenses'); // Read the stored token
+
+    print("Token being sent: ${token ?? 'null'}");
+    final header = {
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      header['Authorization'] = token;
+    }
     final response = await dio.get(
       '$baseUrl/expenses',
       options: Options(
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': '${box.read('expenses')}'
-        },
+        headers: header,
+        // headers: {'Accept': 'application/json', 'Authorization': '$token}'},
         followRedirects: false,
         validateStatus: (status) {
           return status! < 500;
         },
       ),
     );
-    print("response:${response.data}");
+    print("response from api:${response.data}");
     if (response.statusCode == 200) {
       return Expense_Model.fromJson(response.data);
+    } else if (response.data['message'] == 'Access denied, Unauthorized') {
+      return null;
     } else {
-      throw Exception("Failed to fetch expenses");
+      throw Exception("Unexpected response: ${response.data}");
     }
   }
 

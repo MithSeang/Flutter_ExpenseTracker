@@ -10,12 +10,17 @@ class LogoutController extends GetxController {
   final box = GetStorage();
   var isLogout = false.obs;
   Future<void> logout() async {
-    EasyLoading.show(status: 'Loading...');
-    await box.remove('expenses');
-    Get.delete<ExpenseController>();
-    Get.delete<ProfileController>();
-    await Future.delayed(Duration(seconds: 2));
-    EasyLoading.dismiss();
-    Get.offAll(() => LoginScreen());
+    try {
+      EasyLoading.show(status: 'Loading...');
+      box.remove('expenses');
+      Get.delete<ExpenseController>();
+      Get.delete<ProfileController>();
+      await Future.delayed(const Duration(seconds: 2));
+      EasyLoading.dismiss();
+      Get.offAll(() => LoginScreen());
+    } catch (e) {
+      EasyLoading.dismiss();
+      print('Error: $e');
+    }
   }
 }

@@ -1,4 +1,6 @@
+import 'package:expense_tracker/controller/expense_controller.dart';
 import 'package:expense_tracker/controller/manage_screen_controller.dart';
+import 'package:expense_tracker/dependency.dart';
 import 'package:expense_tracker/manage_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -9,6 +11,7 @@ void main() async {
   await GetStorage.init();
   runApp(const MyApp());
   Get.put(ManageScreenController());
+  DependencyInject.init();
 }
 
 class MyApp extends StatelessWidget {

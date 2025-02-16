@@ -4,19 +4,18 @@ class Expense_Model {
 
   Expense_Model({this.message, this.data});
 
-  Expense_Model.fromJson(Map<String, dynamic> json) {
-    message = json['message'];
-    if (json['data'] != null) {
-      data = <Data>[];
-      json['data'].forEach((v) {
-        data!.add(new Data.fromJson(v));
-      });
-    }
+  factory Expense_Model.fromJson(Map<String, dynamic> json) {
+    return Expense_Model(
+      message: json['message'],
+      data: (json['data'] as List?)
+          ?.map((item) => Data.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['message'] = this.message;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['message'] = message;
     if (this.data != null) {
       data['data'] = this.data!.map((v) => v.toJson()).toList();
     }

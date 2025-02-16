@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 class ProfileController extends GetxController {
   final apiService = ApiService();
-  var user = GetUser_Model().user.obs;
+  var user = User().obs;
   var isLoading = false.obs;
   @override
   void onInit() {
@@ -12,15 +12,19 @@ class ProfileController extends GetxController {
     currentUser();
   }
 
-  void currentUser() async {
+  Future<void> currentUser() async {
     try {
       isLoading.value = true;
       final response = await apiService.getCurrentUser();
-      user.value = response.user;
+      user.value = response.user!;
+
+      print('User Profile:${user.value.email}');
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
-      Get.snackbar('Cannot Get User', e.toString());
+      if (Get.currentRoute.isEmpty) {
+        Get.snackbar('Cannot Get User', e.toString());
+      }
     }
   }
 }

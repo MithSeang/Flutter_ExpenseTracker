@@ -6,36 +6,21 @@ import 'package:get/get.dart';
 import '../../controller/logout_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
-  ProfileScreen({super.key});
-  final ProfileController _profileController = Get.put(ProfileController());
-  final LogoutController _logoutController = Get.put(LogoutController());
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final ProfileController _profileController = Get.put(ProfileController());
+    final LogoutController _logoutController = Get.put(LogoutController());
+
     return Obx(() {
-      final profile = _profileController.user.value;
       if (_profileController.isLoading.value) {
         return const Center(
           child: CircularProgressIndicator(),
         );
       }
-      if (profile == null) {
-        return Center(
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("User not found"),
-            SizedBox(
-              width: 150,
-              child: ElevatedButton.icon(
-                  onPressed: () {
-                    _logoutController.logout();
-                  },
-                  label: const Text('Logout'),
-                  icon: const Icon(Icons.logout)),
-            ),
-          ],
-        ));
-      }
+      final profile = _profileController.user.value;
+      print('Profile Screen: ${_profileController.user.value.email}');
       return Scaffold(
           appBar: AppBar(
             centerTitle: true,
@@ -52,11 +37,13 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              _buildTextInput('${profile.username}'),
+              _buildTextInput(
+                  profile.username != null ? profile.username! : "No name"),
               const SizedBox(
                 height: 20,
               ),
-              _buildTextInput("${profile.email}"),
+              _buildTextInput(
+                  profile.email != null ? profile.email! : "No email"),
               const SizedBox(
                 height: 20,
               ),

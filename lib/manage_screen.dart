@@ -30,8 +30,14 @@ class ManageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Scaffold(
+    return Obx(() {
+      if (_manageScreenController.isLoading.value) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+
+      return Scaffold(
         body: IndexedStack(
             index: _manageScreenController.currentScreen.value,
             children: screens),
@@ -64,8 +70,8 @@ class ManageScreen extends StatelessWidget {
                       ))
               ],
             )),
-      ),
-    );
+      );
+    });
   }
 
   void _showAddExpenseDialog(BuildContext context) {
